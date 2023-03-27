@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GPT-4 API Chat</title>
+    <title>GPT-3.5 API Chat</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
@@ -64,34 +64,37 @@
         border-radius: 5px;
         padding: 20px;
         background-color: #f8f8f8;
-        min-height: 100px;
+        min-height: 500px;
         overflow-wrap: break-word;
       }
     </style>
   </head>
   <body>
   
-  <!-- Changes made -->
-    <div class="file-upload">
-      <h1>File Upload</h1>
-      <form method="POST" action="" enctype="multipart/form-data">
-        <p><input type="file" name="file" accept=".txt"></p>
-        <p><input type="submit" value="Submit"></p>
-      </form>
-    </div>
-  <!-- Changes Above -->
+
     <div class="chat-container">
-      <h1>GPT-4 API Chat</h1>
-      <form id="chat-form">
-        <input
-          type="text"
-          id="user-input"
-          name="user_input"
-          placeholder="Type your message..."
-        />
-        <button type="submit" id="submitBtn">Send</button>
-      </form>
-      <div id="result"></div>
+      <!-- Changes made -->
+      <div class="file-upload">
+        <h1>上传文档</h1>
+        <form method="POST" action="" enctype="multipart/form-data">
+          <p><input type="file" name="file" accept=".txt,.docx,.doc" ></p>
+          <p><input type="submit" value="上传"></p>
+        </form>
+      </div>
+      <!-- Changes Above -->
+      <div class="chat-container">
+        <h1>GPT-4 API Chat</h1>
+        <form id="chat-form">
+          <input
+            type="text"
+            id="user-input"
+            name="user_input"
+            placeholder="输入您的问题..."
+          />
+          <button type="submit" id="submitBtn">提交</button>
+        </form>
+        <div id="result"></div>
+      </div>
     </div>
 
     <script>

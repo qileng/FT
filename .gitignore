@@ -128,3 +128,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Ignore docx files
+*.docx
+
+# Ignore txt files
+*.txt
+

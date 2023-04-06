@@ -1,6 +1,7 @@
 import os
 import json
 import docx
+import textwrap
 import requests
 import tiktoken
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
@@ -12,6 +13,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 customsearch_cx = os.getenv("customsearch_cx")
 app.secret_key = os.getenv("flask_secret_key")
+method_prompt_token = 800
 FILE_DIR = './files/'
 tick = tiktoken.get_encoding("gpt2")
 
@@ -39,38 +41,51 @@ def upload_file():
     return redirect(url_for('index'))
 
 
-@app.route("/gpt-3.5-turbo", methods=['GET', 'POST'])
-def gpt4():
-    prompt = request.args.get(
-        'user_input') if request.method == 'GET' else request.form['user_input']
-
-    # Check if 'working_file' exists in the session
-    if 'working_file' not in session:
-        return jsonify(content="请先上传一个文件。")
-
-    # feed file as prompt, precede file content with user prompt
-    with open(session['working_file'], 'r') as f:
-        text = f.read()
-        text = clip_text(text)
-
-    # Send API request
-    messages = [
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "assistant", "content": text},
-        {"role": "user", "content": prompt},
-    ]
-
-    try:
+def generate_summary(text, prompt):
+    # Split the text into chunks
+    chunks = textwrap.wrap(text, width=4096 - method_prompt_token, break_long_words=False)
+    # Generate a summary for each chunk and store it in a list
+    summaries = []
+    for chunk in chunks:
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "assistant", "content": chunk},
+            {"role": "user", "content": prompt},
+        ]
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
-        content = response.choices[0].message["content"]
-        total_tokens = response['usage']['total_tokens']
-    except RateLimitError:
-        content = "The server is experiencing a high volume of requests. Please try again later."
-        total_tokens = 0
+        summaries.append(response.choices[0].message["content"])
+    # Combine the summaries and generate a final summary
+    final_summary = " ".join(summaries)
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "assistant", "content": final_summary},
+        {"role": "user", "content": prompt},
+    ]
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages
+    )
+    content = response.choices[0].message["content"]
+    total_tokens = response['usage']['total_tokens']
+    return content, total_tokens
 
+
+@app.route("/gpt-3.5-turbo", methods=['GET', 'POST'])
+def gpt4():
+    prompt = request.args.get(
+        'user_input') if request.method == 'GET' else request.form['user_input']
+    # Check if 'working_file' exists in the session
+    if 'working_file' not in session:
+        return jsonify(content="请先上传一个文件。")
+    # Feed file as prompt, precede file content with user prompt
+    with open(session['working_file'], 'r') as f:
+        text = f.read()
+        text = clip_text(text)
+    # Generate summary
+    content, total_tokens = generate_summary(text, prompt)
     return jsonify(content=content, total_tokens=total_tokens)
 
 
